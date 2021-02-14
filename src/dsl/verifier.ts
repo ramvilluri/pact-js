@@ -2,8 +2,7 @@
  * Provider Verifier service
  * @module ProviderVerifier
  */
-import pact from "@pact-foundation/pact-node"
-import { qToPromise } from "../common/utils"
+import { verify } from "../native/verifierService"
 import { VerifierOptions as PactNodeVerifierOptions } from "@pact-foundation/pact-node"
 import serviceFactory from "@pact-foundation/pact-node"
 import { omit, isEmpty, pickBy, identity, reduce } from "lodash"
@@ -97,11 +96,11 @@ export class Verifier {
         providerStatesSetupUrl: `${this.address}:${server.address().port}${
           this.stateSetupPath
         }`,
-        ...omit(this.config, "handlers"),
+        ...omit(this.config, "handlers", "stateHandlers", "requestFilter"),
         providerBaseUrl: `${this.address}:${server.address().port}`,
       }
 
-      return qToPromise<any>(pact.verifyPacts(opts))
+      return verify(opts)
     }
   }
 
@@ -133,7 +132,7 @@ export class Verifier {
     this.registerBeforeHook(app)
     this.registerAfterHook(app)
 
-    // Trace req/res logging
+    // Trace req/res lging
     if (this.config.logLevel === "debug") {
       logger.info("debug request/response logging enabled")
       app.use(this.createRequestTracer())
