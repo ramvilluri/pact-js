@@ -23,7 +23,6 @@ const lib = ffi.Library(path.join(__dirname, dll), {
 export const verify = (opts: VerifierOptions): Promise<any> => {
   return new Promise((resolve, reject) => {
     lib.init("LOG_LEVEL")
-    const port = 1234
     const u = url.parse(opts.providerBaseUrl)
 
     const mappedArgs = [
