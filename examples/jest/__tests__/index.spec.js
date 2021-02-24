@@ -3,94 +3,47 @@
 const { pactWith } = require("jest-pact")
 const { Matchers } = require("@pact-foundation/pact")
 
-const { getMeDogs, getMeCats } = require("../index")
+const { fetchInitialAssets } = require("../services")
 
 pactWith(
   { consumer: "Jest Consumer Example", provider: "Jest Provider Example" },
   provider => {
-    describe("Dogs API", () => {
-      const DOGS_DATA = [
-        {
-          dog: 1,
-        },
-      ]
-
-      const dogsSuccessResponse = {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: DOGS_DATA,
-      }
-
-      const dogsListRequest = {
-        uponReceiving: "a request for dogs",
-        withRequest: {
-          method: "GET",
-          path: "/dogs",
-          headers: {
-            Accept: "application/json",
-          },
-        },
+    describe("fetchInitialAssets", () => {
+      const expectedBody = {
+        someField: Matchers.like("Whatever the content is meant to be"),
       }
 
       beforeEach(() => {
         const interaction = {
-          state: "i have a list of dogs",
-          ...dogsListRequest,
-          willRespondWith: dogsSuccessResponse,
+          state: "<Token> is a valid Bearer token",
+          uponReceiving: "a request for the batch with ID 'foo'",
+          withRequest: {
+            method: "GET",
+            path: "/get_batch_by_id/foo",
+            headers: {
+              Accept: "application/json, text/plain, */*",
+              authorization: "Bearer <token>",
+            },
+          },
+          willRespondWith: {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: expectedBody,
+          },
         }
         return provider.addInteraction(interaction)
       })
 
       // add expectations
       it("returns a successful body", () => {
-        return getMeDogs({
-          url: provider.mockService.baseUrl,
-        }).then(dogs => {
-          expect(dogs).toEqual(DOGS_DATA)
-        })
-      })
-    })
-
-    describe("Cats API", () => {
-      const CATS_DATA = [{ cat: 2 }, { cat: 3 }]
-
-      const catsSuccessResponse = {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: CATS_DATA,
-      }
-
-      const catsListRequest = {
-        uponReceiving: "a request for cats with given catId",
-        withRequest: {
-          method: "GET",
-          path: "/cats",
-          query: {
-            "catId[]": Matchers.eachLike("1"),
-          },
-          headers: {
-            Accept: "application/json",
-          },
-        },
-      }
-
-      beforeEach(() => {
-        return provider.addInteraction({
-          state: "i have a list of cats",
-          ...catsListRequest,
-          willRespondWith: catsSuccessResponse,
-        })
-      })
-
-      it("returns a successful body", () => {
-        return getMeCats({
-          url: provider.mockService.baseUrl,
-        }).then(cats => {
-          expect(cats).toEqual(CATS_DATA)
+        return fetchInitialAssets(
+          "foo",
+          provider.mockService.baseUrl,
+          "<token>"
+        ).then(content => {
+          expect(content).toEqual(Matchers.extractPayload(expectedBody))
         })
       })
     })
