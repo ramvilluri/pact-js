@@ -122,6 +122,14 @@
   const INTERACTION_PART_REQUEST = 0;
   const INTERACTION_PART_RESPONSE = 1;
 
+  // Spec version enum
+  const SPECIFICATION_VERSION_UNKNOWN = 0;
+  const SPECIFICATION_VERSION_V1 = 1;
+  const SPECIFICATION_VERSION_V1_1 = 2;
+  const SPECIFICATION_VERSION_V2 = 3;
+  const SPECIFICATION_VERSION_V3 = 4;
+  const SPECIFICATION_VERSION_V4 = 5;
+
   // Function mapping
   // see https://github.com/pact-foundation/pact-cplusplus/blob/master/consumer/src/consumer.cpp for example usage
   const lib = ffi.Library(path.join(__dirname, dll), {
@@ -141,13 +149,18 @@
     write_pact_file: ["int", ["int", "string"]], // mock server port, directory to write file to
     cleanup_mock_server: ["bool", ["int"]], // mock server port
     mock_server_mismatches: ["string", ["int"]], // mock server port
+    log: ["void", ["string", 'string']], // log level, message
+    with_specification: ["void", [PactHandle, "int"]], // pact handle, specification version (see const/enum above)
     get_tls_ca_certificate: ["string", []], // get back the TLS certificate as a string. Useful to load into the trust store in advance if people are desperate for using TLS
   })
 
-  const newPact = (consumer, provider) => {
+  const newPact = (consumer, provider, version) => {
     lib.init("LOG_LEVEL")
 
-    return lib.new_pact(consumer, provider)
+    const p = lib.new_pact(consumer, provider)
+    lib.with_specification(p, version)
+
+    return p
   }
 
   const newInteraction = (handle, description) => {
@@ -238,12 +251,13 @@
     }
   }
 
+
   //
   // Example project
   //
 
   // Create the Pact and interaction
-  const p = newPact("foo-consumer", "bar-provider")
+  const p = newPact("foo-consumer", "bar-provider", SPECIFICATION_VERSION_V2)
   const i = newInteraction(p, "some description")
   uponReceiving(i, "a request to get a dog") // not sure why a description here is needed if newInteraction also has it?
   given(i, "fido exists")
@@ -257,6 +271,8 @@
   })
   withResponseHeader(i, "x-special-header", 0, "header")
   withStatus(i, 200)
+
+  lib.log("INFO", "this message came frome Pact JS")
 
   // Start the mock service
   const host = "127.0.0.1"
