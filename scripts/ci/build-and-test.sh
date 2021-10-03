@@ -12,6 +12,7 @@ export PACT_BROKER_PASSWORD="O5AIZWxelWbLvqMd8PkAVycBJh2Psyg1"
 
 echo "This will be version '$(npx @pact-foundation/absolute-version)'"
 echo "Git describe says $(git describe)"
+echo "Direct says $("$DIR"/../node_modules/.bin/absolute-version-from-git-tag)"
 
 # Link the build so that the examples are always testing the
 # current build, in it's properly exported format
