@@ -7,7 +7,7 @@
   "scripts": {
     "build": "npm run build:v2 && npm run build:v3",
     "build:v2": "npm run dist",
-    "build:v3": "neon build --release",
+    "build:v3": "neon build --release -- --target aarch64-apple-darwin",
     "compile": "rimraf dist && tsc",
     "clean": "rimraf docs dist coverage .nyc_output logs pacts",
     "clean:native": "rimraf native/target",
