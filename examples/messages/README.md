@@ -5,7 +5,7 @@
 ```
 npm i
 npm run test:consumer
-npm run test:publish
+npm run pact:publish
 npm run test:provider
 ```
 
